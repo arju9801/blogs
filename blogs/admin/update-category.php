@@ -1,0 +1,72 @@
+<?php include "header.php"; 
+
+  if($_SESSION["user_role"]=='0'){
+    header("Location: {$hostname}/admin/post.php");
+  }
+  if(isset($_POST['submit'])){
+      include "config.php";
+      $category_id = mysqli_real_escape_string($conn,$_POST['cat_id']);
+      $category_name = mysqli_real_escape_string($conn,$_POST['cat_name']);
+      //\\$password = mysqli_real_escape_string($conn,md5($_POST['password']));
+     
+      $sql1 = "SELECT * FROM category WHERE category_name='{$category_name}'";
+      $result1 = mysqli_query($conn,$sql1);
+
+      if(mysqli_num_rows($result1)>0){
+            $row = mysqli_fetch_assoc($result1);
+            if($row['category_id']!=$category_id){
+              $sql2 = "SELECT * FROM category WHERE category_id={$category_id}";
+              $result2 = mysqli_query($conn,$sql2);
+              $row1 = mysqli_fetch_assoc($result2);
+              $total_posts = $row['post']+$row1['post'];
+              $sql3 = "UPDATE category SET post={$total_posts} WHERE category_id={$row['category_id']}";
+              $result3 = mysqli_query($conn,$sql3);
+              $sql4 = "DELETE FROM category WHERE category_id = {$category_id}";
+              $result4 = mysqli_query($conn,$sql4);
+            }
+            header("Location: {$hostname}/admin/category.php");
+      }else{
+
+            $sql = "UPDATE category SET category_name='{$category_name}' WHERE category_id={$category_id}";
+            $result = mysqli_query($conn,$sql)or die('Query Failed');
+
+            if(mysqli_query($conn,$sql)){
+               header("Location: {$hostname}/admin/category.php");  
+            } 
+      }
+      //header("Location: {$hostname}/admin/category.php");  
+   }     
+?>
+  <div id="admin-content">
+      <div class="container">
+          <div class="row">
+              <div class="col-md-12">
+                  <h1 class="adin-heading"> Update Category</h1>
+              </div>
+              <div class="col-md-offset-3 col-md-6">
+
+                <?php
+                  include "config.php";
+                  $category_id = $_GET['id'];
+                  $sql = "SELECT * FROM category WHERE category_id={$category_id}";
+                  $result = mysqli_query($conn,$sql)or die("Query Failed.");
+                  if(mysqli_num_rows($result)>0){
+                    while($row = mysqli_fetch_assoc($result)){
+                ?>
+                  <form  action="<?php $_SERVER['PHP_SELF']; ?>" method ="POST">
+                      <div class="form-group">
+                          <input type="hidden" name="cat_id"  class="form-control" value="<?php echo $row['category_id']; ?>" placeholder="">
+                      </div>
+                      <div class="form-group">
+                          <label>Category Name</label>
+                          <input type="text" name="cat_name" class="form-control" value="<?php echo $row['category_name']; ?>"  placeholder="" required autofocus>
+                      </div>
+                      <input type="submit" name="submit" class="btn btn-primary" value="Update" required />
+                  </form>
+                  <?php
+                    } } ?>
+                </div>
+              </div>
+            </div>
+          </div>
+<?php include "footer.php"; ?>
